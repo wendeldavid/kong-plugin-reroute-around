@@ -56,42 +56,8 @@ local function getURL(plugin_conf)
   return nil
 end
 
-local function make_request(plugin_conf, customizationUrl)
-  local scheme, host, port, _ = unpack(http:parse_uri(customizationUrl))
-
-  local client = http.new()
-  client:set_timeout(plugin_conf.timeout)
-  -- client:set_keepalive(10000)
-  client:connect(host, port)
-  if scheme == "https" then
-      local ok, err = client:ssl_handshake()
-      if not ok then
-          kong.log.err(err)
-          return kong.response.exit(500, { message = "An unexpected error occurred" })
-      end
-  end
-
-  local res, err = client:request{
-    path = customizationUrl,
-    method = kong.request.get_method(),
-    headers = kong.request.get_headers(),
-    body = kong.request.get_raw_body(),
-    keepalive_timeout = plugin_conf.timeout,
-    ssl_verify = false
-  }
-
-  kong.log.debug("request feito")
-
-  if not res then
-    kong.log.err(err)
-    return kong.response.exit(500, { message = "An unexpected error occurred" })
-  end
-
-  return res
-end
-
 function plugin:access(plugin_conf)
-  
+
   local url = getURL(plugin_conf)
 
   if url ~= nil then
